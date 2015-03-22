@@ -5,18 +5,6 @@
 #' 4. Appropriately labels the data set with descriptive variable names. 
 #' 5. From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
 
-# #' Download raw data file.
-download.file( "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip",
-               "data.zip", method="curl" )
-unzip( "data.zip" )
-
-# #' Read test file:
-readActivities( "UCI HAR Dataset/activity_labels.txt" )
-data <- readData( "UCI HAR Dataset/test/X_test.txt", 
-          "UCI HAR Dataset/test/y_test.txt",
-          "UCI HAR Dataset/test/subject_test.txt")
-
-statistics( data )
 
 
 readActivities <- function( fileName )
@@ -24,7 +12,7 @@ readActivities <- function( fileName )
     activities <- read.table( fileName, sep=" " )
 }
 
-statistics( dataFrame )
+statistics <- function( dataFrame )
 {
     stats <- sapply( f, mean, na.rm=TRUE )
     
@@ -55,10 +43,10 @@ readData <- function( datafileName, activityfileName, subjectfileName )
                               c(activities$V2[as.integer( activity )], 
                                 as.integer( subject ),
                                 features[ c(1:6+2) ]) )
-
-#data.frame( activity=activities$V2[as.integer( activity )], 
-#            subject=as.integer( subject ),
-#            features[ c(1:6) ]
+        
+        #data.frame( activity=activities$V2[as.integer( activity )], 
+        #            subject=as.integer( subject ),
+        #            features[ c(1:6) ]
     }
     
     names(reqFeatures) <- reqFeaturesNames
@@ -67,6 +55,19 @@ readData <- function( datafileName, activityfileName, subjectfileName )
     close( dataFile )
     close( subjectFile )
     close( activityFile )
-
+    
     invisible( reqFeatures )
 }
+
+# #' Download raw data file.
+download.file( "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip",
+               "data.zip", method="curl" )
+unzip( "data.zip" )
+
+# #' Read test file:
+readActivities( "UCI HAR Dataset/activity_labels.txt" )
+data <- readData( "UCI HAR Dataset/test/X_test.txt", 
+          "UCI HAR Dataset/test/y_test.txt",
+          "UCI HAR Dataset/test/subject_test.txt")
+
+statistics( data )

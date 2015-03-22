@@ -5,13 +5,6 @@ date: "March 15, 2015"
 output: html_document
 ---
 
-any transformations or work that you performed to clean up the data called CodeBook.md
-
-
-
-
-
-
 ## Study Desgin
 Download datat from the following link:
 https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip (1)

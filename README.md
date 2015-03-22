@@ -5,5 +5,5 @@ date: "March 15, 2015"
 output: html_document
 ---
 
-You should also include a README.md in the repo with your scripts. This repo explains how all of the scripts work and how they are connected.  
+Execute run_Analysis.R. That script will download the data file, unzip it and then create the tidy data in a file called tidy.cvs.
 
