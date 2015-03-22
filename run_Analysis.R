@@ -8,7 +8,7 @@
 # #' Download raw data file.
 download.file( "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip",
                "data.zip", method="curl" )
-unzip( "data.zip", list=TRUE )
+unzip( "data.zip" )
 
 # #' Read test file:
 readActivities( "UCI HAR Dataset/activity_labels.txt" )
@@ -28,7 +28,7 @@ statistics( dataFrame )
 {
     stats <- sapply( f, mean, na.rm=TRUE )
     
-    write.csv( stats, "" )
+    write.csv( stats, "averages.csv" )
 }
 
 readData <- function( datafileName, activityfileName, subjectfileName )
