@@ -5,7 +5,9 @@ date: "March 15, 2015"
 output: html_document
 ---
 
-Execute run_Analysis.R. That script will automatically perform the following actions:
+Execute run_Analysis.R, no parameters are required, however, that script requires Internet access.
+
+That script will automatically perform the following actions:
 1) Download the data file.  
 2) Unzip the data file.  
 3) Extract the required data from train and test data sets.  
