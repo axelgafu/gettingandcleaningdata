@@ -5,27 +5,82 @@
 #' 4. Appropriately labels the data set with descriptive variable names. 
 #' 5. From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
 
+#' Remove temporary/intermediate files created for this analysis.
+removeTempFiles <- function()
+{
+    file.remove( "meanstd_test.csv" )
+    file.remove( "meanstd_train.csv" )
+    unlink( "UCI HAR Dataset", recursive = TRUE )
+}
 
+#' Merges test and train csv files generated after extracting the relevant
+#' variables (i.e. executing "readData" function).
+#' 
+#' This function requires the following files to be available:
+#'  - meanstd_test.csv
+#'  - meanstd_train.csv
+mergeFiles <- function()
+{
+    testData <- read.csv( "meanstd_test.csv" )
+    trainData <- read.csv( "meanstd_train.csv" )
+    
+    mergedData <- rbind( testData, trainData )
+    for( i in 1:length( mergedData$activity ) )
+    {
+        mergedData$activity[i] <- as.character( 
+            activities$V2[ as.integer(mergedData$activity[i]) ] )
+    }
+    write.csv( mergedData, "tidyData.csv", row.names=FALSE )
+    
+    invisible( rbind( testData, trainData ) )
+}
 
+#' Loads the activities file passed as parameter.
 readActivities <- function( fileName )
 {
     activities <- read.table( fileName, sep=" " )
 }
 
+#' Obtains the statistics for the data frame passed as parameter:
+#'  - mean
+#'  - standar deviation.
+#' 
+#' Results are grouped by activity and subject.
 statistics <- function( dataFrame )
 {
-    stats <- sapply( f, mean, na.rm=TRUE )
+    reqFeatures <- data.frame( values=numeric() )
     
-    write.csv( stats, "averages.csv" )
+    for( subject in 1:30 )
+    {
+        bySub <- data[ data$subject==subject, ]
+        reqFeatures <- rbind( reqFeatures,
+            sapply( bySub, tapply, bySub$activity, mean, na.rm=TRUE ) )
+    }
+    for( i in 1:length( reqFeatures$activity ) )
+    {
+        reqFeatures$activity[i] <- as.character( 
+            activities$V2[ as.integer(reqFeatures$activity[i]) ] )
+    }
+    write.csv( reqFeatures, "averages.csv", row.names=FALSE )
+    
+    invisible( reqFeatures )
 }
 
-readData <- function( datafileName, activityfileName, subjectfileName )
+#' Processes the data from the specified file. It joins the subject, the 
+#' activity and the mean/standard deviation values.
+readData <- function( type, datafileName, activityfileName, subjectfileName )
 {
-    activityFile <- file( activityfileName )
-    subjectFile <- file( subjectfileName )
-    dataFile <- file( datafileName )
-    reqFeatures <- numeric(8)
-    reqFeaturesNames <- c( "activity", "subject", "tBodyAcc-mean()-X", "tBodyAcc-mean()-Y", "tBodyAcc-mean()-Z", "tBodyAcc-std()-X", "tBodyAcc-std()-Y", "tBodyAcc-std()-Z")
+    activityFile <- file( paste( "UCI HAR Dataset/", type, "/y_", type, ".txt", sep="" ) )
+    subjectFile <- file( paste( "UCI HAR Dataset/", type, "/subject_", type, ".txt", sep="" ) )
+    dataFile <- file( paste( "UCI HAR Dataset/", type, "/X_", type, ".txt", sep="" ) )
+    reqFeaturesNames <- c( "subject", "activity", "tBodyAcc-mean()-X", 
+                           "tBodyAcc-mean()-Y", "tBodyAcc-mean()-Z", 
+                           "tBodyAcc-std()-X", "tBodyAcc-std()-Y", 
+                           "tBodyAcc-std()-Z",
+                           "tGravityAcc-mean()-X", "tGravityAcc-mean()-Y",
+                           "tGravityAcc-mean()-Z", "tGravityAcc-std()-X",
+                           "tGravityAcc-std()-Y",  "tGravityAcc-std()-Z" )
+    
     
     reqFeatures <- data.frame( values=numeric() )
     
@@ -40,17 +95,16 @@ readData <- function( datafileName, activityfileName, subjectfileName )
         subject <- readLines( subjectFile, n=1, warn=FALSE )
         features <- as.numeric( unlist( strsplit( line, split=" " ), recursive=TRUE ) )
         reqFeatures <- rbind( reqFeatures, 
-                              c(activities$V2[as.integer( activity )], 
-                                as.integer( subject ),
-                                features[ c(1:6+2) ]) )
-        
-        #data.frame( activity=activities$V2[as.integer( activity )], 
-        #            subject=as.integer( subject ),
-        #            features[ c(1:6) ]
+                    c(as.integer( subject ), 
+                        activities$V2[as.integer( activity )],
+                        features[ c(1:6+2, 41:46+2) ]) ) 
+                        # +2 is to remove the trailing spaces at the beggining 
+                        # of each row.
     }
     
     names(reqFeatures) <- reqFeaturesNames
-    write.csv( reqFeatures, file="tidy.csv", col.names=TRUE )
+    write.csv( reqFeatures, file=paste( "meanstd_", type, ".csv", sep="" ),
+               row.names=FALSE)
     
     close( dataFile )
     close( subjectFile )
@@ -59,15 +113,28 @@ readData <- function( datafileName, activityfileName, subjectfileName )
     invisible( reqFeatures )
 }
 
-# #' Download raw data file.
-download.file( "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip",
-               "data.zip", method="curl" )
-unzip( "data.zip" )
 
-# #' Read test file:
-readActivities( "UCI HAR Dataset/activity_labels.txt" )
-data <- readData( "UCI HAR Dataset/test/X_test.txt", 
-          "UCI HAR Dataset/test/y_test.txt",
-          "UCI HAR Dataset/test/subject_test.txt")
+
+# #' Download raw data file.
+cat( "Downloading data file (this will take a while)...\n" )
+invisible( download.file( "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip",
+               "data.zip", method="curl" ) )
+cat( "Unzipping data file...")
+unzip( "data.zip" )
+readActivities( "UCI HAR Dataset/activity_labels.txt\n" )
+
+# #' Read test and train files:
+cat( "Processing test set...\n" )
+data <- readData( "test" )
+cat( "Processing train set...\n" )
+data <- readData( "train" )
+
+cat( "Merging test and training sets..." )
+data <- mergeFiles()
+cat( "\tOutput file:    ", getwd(), " tidyData.csv\n" )
 
 statistics( data )
+cat( "\tSee statistics: ", getwd(), " averages.csv\n" )
+
+removeTempFiles()
+cat( "Done.\n" )
